@@ -1,0 +1,28 @@
+{
+  "name": "m.i.r.c.h",
+  "version": "1.0.0",
+  "description": "A simple Internet Relay Chat application.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "devstart": "nodemon index.js",
+    "test": "echo \\\"Error: no test specified\\\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minavu/m.i.r.c.h.git"
+  },
+  "author": "Mina Vu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/minavu/m.i.r.c.h/issues"
+  },
+  "homepage": "https://github.com/minavu/m.i.r.c.h#readme",
+  "dependencies": {
+    "express": "^4.17.3",
+    "http": "^0.0.1-security",
+    "nodemon": "^2.0.15",
+    "socket.io": "^4.4.1",
+    "socket.io-client": "^4.4.1"
+  }
+}
