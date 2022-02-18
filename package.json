@@ -2,10 +2,10 @@
   "name": "m.i.r.c.h",
   "version": "1.0.0",
   "description": "A simple Internet Relay Chat application.",
-  "main": "index.js",
+  "main": "the_server/server.js",
   "scripts": {
-    "start": "node index.js",
-    "devstart": "nodemon index.js",
+    "start": "node the_server/server.js",
+    "devstart": "nodemon the_server/server.js",
     "test": "echo \\\"Error: no test specified\\\" && exit 1"
   },
   "repository": {

@@ -1,10 +1,17 @@
 const express = require("express");
+const http = require("http");
+const path = require("path");
 const app = express();
-const server = require("http").Server(app);
-const io = require("socket.io")(server);
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 const port = 5001;
 
-app.use(express.static(__dirname + "/the_client/"));
+app.use(express.static(path.join(__dirname, "../the_client")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../the_client/index.html"));
+});
 
 io.on("connection", (socket) => {
   console.log(`client with socket id ${socket.id} connected`);
@@ -15,16 +22,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message", (data) => {
-    console.log(data);
+    console.log("Client says: ", data);
 
     io.emit("message", {
-      socket: socket.id.substr(0, 4),
+      socket: socket.id,
       message: data,
     });
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`client with socket id ${socket.id} disconnected`);
   });
 });
 
