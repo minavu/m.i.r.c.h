@@ -8,18 +8,24 @@
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script defer type="text/javascript" src="client.js"></script>
   </head>
-  <body class="d-flex align-items-center bg-dark" style="height: 100vh;">
+  <body class="d-flex-column align-items-center bg-dark" style="height: 100vh;">
+    <header class="m-0 p-0 text-center text-light">
+      <h1 class="m-3">Welcome to M.I.R.C.H</h1>
+    </header>
+
     <main class="d-flex bg-light w-100 rounded-2" style="height: 80vh;">
 
-      <section class="w-25 border border-5"></section>
+      <section class="w-25 border border-5 ps-2" id="rooms">
+        <h4 class="pt-3 text-decoration-underline">All Rooms</h4>
+      </section>
 
       <section class="d-flex flex-column w-50 border-top border-bottom border-5">
-        <div class="text-center bg-info pt-2"><h1 id="title">Hello World</h1></div>
-        <div class="flex-grow-1" id="displayscreen"></div>
+        <div class="text-center bg-info pt-2" style="height: 55px;"><h2 id="title">Hello World</h2></div>
+        <div class="flex-grow-1" id="chat-screen" style="overflow: auto;"></div>
         <div class="">
           <form class="d-flex">
-            <textarea class="form-control border border-2 border-success rounded-0" id="chatbox" name="chatbox" placeholder="Type something..." rows="2"></textarea>
-            <input type="submit" class="btn btn-success rounded-0" id="submit" value="Send">
+            <textarea disabled class="form-control border border-2 border-success rounded-0" id="chatbox" name="chatbox" placeholder="Type something..." rows="2"></textarea>
+            <input disabled type="submit" class="btn btn-success rounded-0" id="submit-btn" value="Send">
           </form>
         </div>
       </section>
@@ -27,5 +33,9 @@
       <section class="w-25 border border-5"></section>
 
     </main>
+
+    <!-- <footer class="text-center text-light">
+      <h6 class="fst-italic">Hosted by Mina</h6>
+    </footer> -->
   </body>
 </html>
