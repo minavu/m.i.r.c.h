@@ -14,128 +14,112 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+const C_LOG = console.log;
+const TEXT_COLORS = ["Brown", "DarkBlue", "Crimson", "Chocolate", "BlueViolet"];
+
 io.on("connection", (socket) => {
   socket.leave(socket.id);
-  let sock_id = socket.id.substring(0, 4).toUpperCase();
-  let curr_room = "";
-  console.log(`client with socket id ${sock_id} connected`);
+  socket.join("Lobby");
 
-  // socket.join("lobby");
+  let color = TEXT_COLORS[Math.floor(Math.random() + 5)];
+  let username = socket.id.substring(0, 6).toUpperCase();
+  const MY_DATA = {
+    my_username: username,
+    my_rooms: ["Lobby"],
+    my_current_room: "Lobby",
+    my_color: color,
+  };
+
+  C_LOG(
+    `Client with given username ${MY_DATA.my_username} connected to server...`
+  );
 
   socket.emit("welcome", {
-    welcome: "Welcome to the chat",
-    socket: sock_id,
+    welcome_message: "Welcome to the chat",
+    socket_data: MY_DATA,
     rooms: getAllRooms(),
     users: getAllUsers(),
   });
 
   socket.on("message", (data) => {
-    io.to(curr_room).emit("message", {
-      socket: sock_id,
-      message: data,
+    let { socket_data, message } = data;
+    C_LOG(socket_data);
+    updateMyData(socket_data);
+    io.to(MY_DATA.my_current_room).emit("message", {
+      user: MY_DATA.my_username,
+      message: message,
     });
   });
 
   socket.on("create_room", () => {
     let new_room = uniqueNamesGenerator({ dictionaries: [colors] });
-    socket.leave(curr_room);
-    socket.join(new_room);
-    curr_room = new_room;
-
-    io.to(curr_room).emit("announcement", {
-      socket: sock_id,
-      announce: "has joined room",
-      room: curr_room,
-    });
-
-    socket.emit("joined_room", {
-      socket: sock_id,
-      status: "created and join new room",
-      current: curr_room,
-      rooms: getAllRooms(),
-    });
-
-    io.emit("update_rooms_list", {
-      rooms: getAllRooms(),
-    });
-
-    io.to(curr_room).emit("update_users_list", {
-      room: curr_room,
-      users: getRoomUsers(curr_room),
-    });
+    new_room =
+      new_room.charAt(0).toUpperCase() + new_room.slice(1, new_room.length - 1);
+    joinRoomAndEmitStatus(new_room);
   });
 
   socket.on("join_room", (data) => {
     let { room } = data;
-    socket.leave(curr_room);
-    socket.join(room);
-    curr_room = room;
-
-    io.to(curr_room).emit("announcement", {
-      socket: sock_id,
-      announce: "has joined room",
-      room: curr_room,
-    });
-
-    socket.emit("joined_room", {
-      socket: sock_id,
-      status: "joined existing room",
-      current: curr_room,
-      rooms: getAllRooms(),
-    });
-
-    io.to(curr_room).emit("update_users_list", {
-      room: curr_room,
-      users: getRoomUsers(curr_room),
-    });
+    joinRoomAndEmitStatus(room);
   });
 
-  socket.on("leave_room", () => {
-    io.to(curr_room).emit("announcement", {
-      socket: sock_id,
-      announce: "has left room",
-      room: curr_room,
+  socket.on("leave_room", (data) => {
+    let { room } = data;
+
+    io.to(room).emit("announcement", {
+      announcement: `${MY_DATA.my_username} has left room ${room}`,
     });
 
-    socket.leave(curr_room);
-    curr_room = "";
+    socket.leave(room);
+    MY_DATA.my_rooms = MY_DATA.my_rooms.filter((my_room) => my_room !== room);
+    MY_DATA.my_current_room = MY_DATA.my_rooms[MY_DATA.my_rooms.length - 1];
 
     socket.emit("left_room", {
-      socket: sock_id,
-      status: "left room",
-      current: curr_room,
-      rooms: getAllRooms(),
+      socket_data: MY_DATA,
     });
 
     io.emit("update_rooms_list", {
       rooms: getAllRooms(),
     });
+  });
 
-    socket.emit("update_users_list", {
-      room: curr_room,
-      users: getAllUsers(),
+  // socket.on("disconnect", () => {
+  //   if (curr_room === "") {
+  //     io.emit("update_users_list", {
+  //       room: curr_room,
+  //       users: getAllUsers(),
+  //     });
+  //   } else {
+  //     io.to(curr_room).emit("announcement", {
+  //       socket: sock_id,
+  //       announce: "has left room",
+  //       room: curr_room,
+  //     });
+
+  //     io.to(curr_room).emit("udate_users_list", {
+  //       room: curr_room,
+  //       users: getRoomUsers(curr_room),
+  //     });
+  //   }
+  // });
+
+  function joinRoomAndEmitStatus(room_to_join) {
+    socket.join(room_to_join);
+    MY_DATA.my_rooms.push(room_to_join);
+    MY_DATA.my_current_room = room_to_join;
+
+    socket.emit("joined_room", {
+      socket_data: MY_DATA,
     });
-  });
 
-  socket.on("disconnect", () => {
-    if (curr_room === "") {
-      io.emit("update_users_list", {
-        room: curr_room,
-        users: getAllUsers(),
-      });
-    } else {
-      io.to(curr_room).emit("announcement", {
-        socket: sock_id,
-        announce: "has left room",
-        room: curr_room,
-      });
+    io.to(MY_DATA.my_current_room).emit("announcement", {
+      announcement: `${MY_DATA.my_username} just joined room ${MY_DATA.my_current_room}`,
+    });
 
-      io.to(curr_room).emit("udate_users_list", {
-        room: curr_room,
-        users: getRoomUsers(curr_room),
-      });
-    }
-  });
+    io.emit("update_rooms_list", {
+      rooms: getAllRooms(),
+    });
+  }
 
   function getAllRooms() {
     let all_rooms_list = [];
@@ -160,6 +144,14 @@ io.on("connection", (socket) => {
       all_room_users.push(value.substring(0, 4).toUpperCase());
     });
     return all_room_users;
+  }
+
+  function updateMyData(new_socket_data) {
+    let { my_username, my_rooms, my_current_room, my_color } = new_socket_data;
+    MY_DATA.my_username = my_username;
+    MY_DATA.my_rooms = my_rooms;
+    MY_DATA.my_current_room = my_current_room;
+    MY_DATA.my_color = my_color;
   }
 });
 

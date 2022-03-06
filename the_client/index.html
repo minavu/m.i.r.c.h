@@ -8,26 +8,33 @@
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script defer type="text/javascript" src="client.js"></script>
   </head>
-  <body class="d-flex-column align-items-center bg-dark" style="height: 100vh;">
-    <header class="m-0 p-0 text-center text-light">
-      <h1 class="m-3">Welcome to M.I.R.C.H</h1>
+
+  <body class="m-0 p-0 d-flex-column align-items-center bg-dark">
+    <header class="m-0 p-0 d-flex align-items-center justify-content-center text-light" style="height: 10vh;">
+      <h1 class="m-0 p-0">Welcome to M.I.R.C.H</h1>
     </header>
 
-    <main class="d-flex bg-light w-100 rounded-2" style="height: 80vh;">
+    <main class="d-flex bg-light w-100 rounded-2" style="height: 90vh;">
 
       <section class="w-25 border border-5 ps-2" id="rooms">
         <h4 class="pt-3 text-decoration-underline">All Rooms</h4>
       </section>
 
-      <section class="d-flex flex-column w-50 border-top border-bottom border-5">
-        <div class="text-center bg-info pt-2" style="height: 55px;"><h2 id="title">Hello World</h2></div>
-        <div class="flex-grow-1" id="chat-screen" style="overflow: auto;"></div>
-        <div class="">
-          <form class="d-flex">
-            <textarea disabled class="form-control border border-2 border-success rounded-0" id="chatbox" name="chatbox" placeholder="Type something..." rows="2"></textarea>
-            <input disabled type="submit" class="btn btn-success rounded-0" id="submit-btn" value="Send">
-          </form>
-        </div>
+      <section class="d-flex align-items-stretch w-50 border-top border-bottom border-5">
+        <section class="bg-secondary">
+          <div class="pt-3 pb-3 bg-info border-end border-bottom" style="writing-mode: vertical-lr; text-orientation: upright;">Lobby</div>
+        </section>
+        <!-- <section class="d-flex flex-column w-50 border-top border-bottom border-5"> -->
+        <section class="d-flex flex-column flex-grow-1">
+          <div class="text-center bg-info pt-2" style="height: 55px;"><h2 id="title">Hello World</h2></div>
+          <div class="ms-1 flex-grow-1" id="chat-screen" style="overflow: auto;"></div>
+          <div class="">
+            <form class="d-flex">
+              <input type="text" class="form-control border border-2 border-success rounded-0" id="chatbox" name="chatbox" placeholder="Type something..." rows="2">
+              <input type="submit" class="btn btn-success rounded-0" id="submit-btn" value="Send">
+            </form>
+          </div>
+        </section>
       </section>
 
       <section class="w-25 border border-5 pe-2" id="users">
@@ -35,9 +42,5 @@
       </section>
 
     </main>
-
-    <!-- <footer class="text-center text-light">
-      <h6 class="fst-italic">Hosted by Mina</h6>
-    </footer> -->
   </body>
 </html>

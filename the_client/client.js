@@ -1,95 +1,86 @@
 const socket = io("http://localhost:5001");
+const C_LOG = console.log;
+
+const MY_DATA = {
+  my_username: "",
+  my_rooms: [],
+  my_current_room: "",
+  my_color: "black",
+};
+let display_chat_title = document.getElementById("title");
+let display_chat_screen = document.getElementById("chat-screen");
+
 let joined_room = "";
 
 socket.on("welcome", (data) => {
-  let { welcome, socket, rooms, users } = data;
-  document.getElementById("title").textContent = `Hello ${socket}`;
-  displayAllRooms(rooms, joined_room);
+  let { welcome_message, socket_data, rooms, users } = data;
+
+  updateMyData(socket_data);
+
+  display_chat_title.textContent = `Hello ${MY_DATA.my_username}`;
+  displayAllRooms(rooms, MY_DATA.my_rooms);
   displayAllUsers(joined_room, users);
 
-  let chat_screen = document.getElementById("chat-screen");
-
-  let p = document.createElement("p");
-  p.innerHTML = `${welcome}, ${socket}. Select a room from the left screen to start.`;
-
-  chat_screen.append(p);
-  p.scrollIntoView({ behavior: "smooth", block: "end", inline: "end" });
+  appendPtagWithScrollToView(
+    display_chat_screen,
+    `${welcome_message}, ${MY_DATA.my_username}. Select a room from the left screen to start.`
+  );
 });
 
 socket.on("message", (data) => {
-  let { socket, message } = data;
-  console.log("Server relayed: ", data);
-  let chat_screen = document.getElementById("chat-screen");
-
-  let p = document.createElement("p");
-  p.innerHTML = socket + ":  " + message;
-
-  chat_screen.append(p);
-  p.scrollIntoView({ behavior: "smooth", block: "end", inline: "end" });
+  let { user, message } = data;
+  appendPtagWithScrollToView(display_chat_screen, `${user}: ${message}`);
 });
 
 socket.on("announcement", (data) => {
-  let { socket, announce, room } = data;
-  let chat_screen = document.getElementById("chat-screen");
-
-  let p = document.createElement("p");
-  p.innerHTML = `${socket} ${announce} ${room}`;
-
-  chat_screen.append(p);
-  p.scrollIntoView({ behavior: "smooth", block: "end", inline: "end" });
+  let { announcement } = data;
+  appendPtagWithScrollToView(display_chat_screen, announcement);
 });
 
 socket.on("update_rooms_list", (data) => {
   let { rooms } = data;
-  displayAllRooms(rooms, joined_room);
+  displayAllRooms(rooms, MY_DATA.my_rooms);
 });
 
-socket.on("update_users_list", (data) => {
-  let { room, users } = data;
-  let users_title = document.getElementById("users-title");
-  users_title.textContent = `${room || "All"} Users`;
-  displayAllUsers(room, users);
-});
+// socket.on("update_users_list", (data) => {
+//   let { room, users } = data;
+//   let users_title = document.getElementById("users-title");
+//   users_title.textContent = `${room || "All"} Users`;
+//   displayAllUsers(room, users);
+// });
 
 socket.on("joined_room", (data) => {
-  let { current, rooms } = data;
-  joined_room = current;
-  displayAllRooms(rooms, joined_room);
+  let { socket_data } = data;
+  updateMyData(socket_data);
 
-  let title = document.getElementById("title");
-  title.innerHTML = `Room ${current}`;
+  display_chat_title.innerHTML = `Room ${MY_DATA.my_current_room}`;
 
   let btn = document.createElement("input");
   btn.setAttribute("type", "button");
   btn.setAttribute("onclick", "btnHandler(event)");
   btn.setAttribute("value", "Leave");
-  btn.setAttribute("name", current);
+  btn.setAttribute("name", MY_DATA.my_current_room);
   btn.classList.add("me-2", "btn", "btn-outline-dark");
   btn.style.display = "inline-block";
-  title.insertBefore(btn, title.firstChild);
-
-  document.getElementById("chatbox").disabled = false;
-  document.getElementById("submit-btn").disabled = false;
+  display_chat_title.insertBefore(btn, display_chat_title.firstChild);
 });
 
 socket.on("left_room", (data) => {
-  let { current, rooms } = data;
+  let { socket_data } = data;
+  updateMyData(socket_data);
 
-  joined_room = "";
-  displayAllRooms(rooms, joined_room);
-
-  let title = document.getElementById("title");
-  title.removeChild(title.firstChild);
-  title.innerHTML = "Select a room...";
-
-  document.getElementById("chatbox").disabled = true;
-  document.getElementById("submit-btn").disabled = true;
+  display_chat_title.removeChild(display_chat_title.firstChild);
+  display_chat_title.innerHTML = `Room ${MY_DATA.my_current_room}`;
 });
 
 document.querySelector("form").addEventListener("submit", (event) => {
   event.preventDefault();
   let message = document.querySelector("#chatbox");
-  socket.emit("message", message.value);
+  C_LOG(MY_DATA);
+  socket.emit("message", {
+    socket_data: MY_DATA,
+    message: message.value,
+  });
   message.value = "";
 });
 
@@ -105,7 +96,9 @@ const btnHandler = (event) => {
   }
 
   if (event.target.value === "Leave") {
-    socket.emit("leave_room");
+    socket.emit("leave_room", {
+      room: event.target.name,
+    });
   }
 };
 
@@ -123,15 +116,13 @@ const displayAllUsers = (joined_room, users) => {
   });
 };
 
-const displayAllRooms = (rooms, current) => {
+const displayAllRooms = (all_rooms, my_rooms) => {
   document.querySelectorAll(".room-line").forEach((line) => line.remove());
   let display_rooms = document.getElementById("rooms");
-  let found_joined_room = false;
-  rooms.forEach((room) => {
+  all_rooms.forEach((room) => {
     let buttonBootstrapColor = "btn-outline-primary";
     let buttonMessage = "Join";
-    if (room === current) {
-      found_joined_room = true;
+    if (my_rooms.includes(room)) {
       buttonBootstrapColor = "btn-outline-success";
       buttonMessage = "In";
     }
@@ -143,14 +134,6 @@ const displayAllRooms = (rooms, current) => {
     );
   });
   appendRoomDescription(display_rooms, "btn-danger", "Create", "New Room");
-  if (found_joined_room) {
-    document
-      .getElementById("rooms")
-      .querySelectorAll("input[type='button']")
-      .forEach((button) => {
-        button.disabled = true;
-      });
-  }
 };
 
 const appendRoomDescription = (
@@ -177,4 +160,19 @@ const appendRoomDescription = (
   div.append(p);
 
   parentElement.append(div);
+};
+
+const appendPtagWithScrollToView = (parentElement, message) => {
+  let p = document.createElement("p");
+  p.innerHTML = message;
+  parentElement.append(p);
+  p.scrollIntoView({ behavior: "smooth", block: "end", inline: "end" });
+};
+
+const updateMyData = (new_socket_data) => {
+  let { my_username, my_rooms, my_current_room, my_color } = new_socket_data;
+  MY_DATA.my_username = my_username;
+  MY_DATA.my_rooms = my_rooms;
+  MY_DATA.my_current_room = my_current_room;
+  MY_DATA.my_color = my_color;
 };
