@@ -21,7 +21,7 @@ io.on("connection", (socket) => {
   socket.leave(socket.id);
   socket.join("Lobby");
 
-  let color = TEXT_COLORS[Math.floor(Math.random() + 5)];
+  let color = TEXT_COLORS.shift();
   let username = socket.id.substring(0, 6).toUpperCase();
   const MY_DATA = {
     my_username: username,
@@ -29,10 +29,17 @@ io.on("connection", (socket) => {
     my_current_room: "Lobby",
     my_color: color,
   };
+  TEXT_COLORS.push(color);
 
   C_LOG(
     `Client with given username ${MY_DATA.my_username} connected to server...`
   );
+
+  io.emit("update_users_list", {
+    room: "Lobby",
+    users: getAllUsers(),
+  });
+  // C_LOG(getAllUsers());
 
   socket.emit("welcome", {
     welcome_message: "Welcome to the chat",
@@ -43,7 +50,6 @@ io.on("connection", (socket) => {
 
   socket.on("message", (data) => {
     let { socket_data, message } = data;
-    // C_LOG(socket_data);
     updateMyData(socket_data);
     io.to(MY_DATA.my_current_room).emit("message", {
       user: MY_DATA.my_username,
@@ -84,6 +90,11 @@ io.on("connection", (socket) => {
     io.emit("update_rooms_list", {
       rooms: getAllRooms(),
     });
+
+    io.to(room).emit("update_users_list", {
+      room: room,
+      users: getRoomUsers(room),
+    });
   });
 
   socket.on("disconnect", (reason) => {
@@ -93,6 +104,11 @@ io.on("connection", (socket) => {
         io.to(room).emit("announcement", {
           room: room,
           announcement: `${MY_DATA.my_username} was disconnected...`,
+        });
+
+        io.to(room).emit("update_users_list", {
+          room: room,
+          users: getRoomUsers(room),
         });
       });
   });
@@ -114,6 +130,11 @@ io.on("connection", (socket) => {
     io.emit("update_rooms_list", {
       rooms: getAllRooms(),
     });
+
+    io.to(MY_DATA.my_current_room).emit("update_users_list", {
+      room: MY_DATA.my_current_room,
+      users: getRoomUsers(MY_DATA.my_current_room),
+    });
   }
 
   function getAllRooms() {
@@ -127,16 +148,16 @@ io.on("connection", (socket) => {
   function getAllUsers() {
     let all_user_ids = [];
     io.sockets.adapter.sids.forEach((value, key) => {
-      all_user_ids.push(key.substring(0, 4).toUpperCase());
+      all_user_ids.push(key.substring(0, 6).toUpperCase());
     });
     return all_user_ids;
   }
 
   function getRoomUsers(room) {
     let all_room_users = [];
-    console.log("users in room ", room, io.sockets.adapter.rooms.get(room));
+    // console.log("users in room ", room, io.sockets.adapter.rooms.get(room));
     io.sockets.adapter.rooms.get(room).forEach((value) => {
-      all_room_users.push(value.substring(0, 4).toUpperCase());
+      all_room_users.push(value.substring(0, 6).toUpperCase());
     });
     return all_room_users;
   }

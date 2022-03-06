@@ -27,7 +27,7 @@ socket.on("welcome", (data) => {
 
   display_chat_title.textContent = `Hello ${MY_DATA.my_username}`;
   displayAllRooms(rooms, MY_DATA.my_rooms);
-  displayAllUsers(joined_room, users);
+  // displayAllUsers(joined_room, users);
 
   appendPtagWithScrollToView(
     display_chat_screen,
@@ -66,12 +66,10 @@ socket.on("update_rooms_list", (data) => {
   displayAllRooms(rooms, MY_DATA.my_rooms);
 });
 
-// socket.on("update_users_list", (data) => {
-//   let { room, users } = data;
-//   let users_title = document.getElementById("users-title");
-//   users_title.textContent = `${room || "All"} Users`;
-//   displayAllUsers(room, users);
-// });
+socket.on("update_users_list", (data) => {
+  let { room, users } = data;
+  displayAllUsers(room, users);
+});
 
 let display_chatbox_views_parent = document.getElementById(
   "chatbox-views-parent"
@@ -98,11 +96,13 @@ const createNewChatboxView = (room_name, z_index) => {
     "h-100",
     "position-absolute",
     "d-flex",
-    "flex-column",
     "room-view"
   );
   section.setAttribute("id", `${room_name}-view`);
   section.style.zIndex = z_index;
+
+  let inner_section_1 = document.createElement("section");
+  inner_section_1.classList.add("flex-grow-1", "d-flex", "flex-column");
 
   let div_title = document.createElement("div");
   div_title.classList.add(
@@ -133,11 +133,12 @@ const createNewChatboxView = (room_name, z_index) => {
   div_title.append(h2);
 
   let div_screen = document.createElement("div");
-  div_screen.classList.add("ms-1", "flex-grow-1", "bg-white");
+  div_screen.classList.add("ps-1", "pe-1", "flex-grow-1", "bg-white");
   div_screen.setAttribute("id", `${room_name}-chat-screen`);
   div_screen.style.overflow = "auto";
 
   let div_form = document.createElement("div");
+  div_form.classList.add("bg-white");
   let form = document.createElement("form");
   form.classList.add("d-flex");
   form.setAttribute("onsubmit", "submitHandler(event)");
@@ -156,16 +157,36 @@ const createNewChatboxView = (room_name, z_index) => {
   input_text.setAttribute("placeholder", "Type something...");
   let input_submit = document.createElement("input");
   input_submit.setAttribute("type", "submit");
-  input_submit.classList.add("btn", "btn-warning", "rounded-0");
+  input_submit.classList.add("btn", "btn-success", "rounded-0");
   input_submit.setAttribute("id", `${room_name}-submit-btn`);
   input_submit.setAttribute("value", "Send");
   form.append(input_text);
   form.append(input_submit);
   div_form.append(form);
 
-  section.append(div_title);
-  section.append(div_screen);
-  section.append(div_form);
+  inner_section_1.append(div_title);
+  inner_section_1.append(div_screen);
+  inner_section_1.append(div_form);
+
+  let inner_section_2 = document.createElement("section");
+  inner_section_2.classList.add(
+    "w-25",
+    "bg-white",
+    "border-start",
+    "border-end",
+    "border-5",
+    "pe-2"
+  );
+  inner_section_2.setAttribute("id", `${room_name}-users-list`);
+  inner_section_2.style.overflow = "auto";
+  let h4 = document.createElement("h4");
+  h4.classList.add("pt-3", "text-decoration-underline", "text-end");
+  h4.setAttribute("id", `${room_name}-users-title`);
+  h4.textContent = `${room_name} Users`;
+  inner_section_2.append(h4);
+
+  section.append(inner_section_1);
+  section.append(inner_section_2);
 
   TEXT_COLORS.push(bgc);
 
@@ -222,9 +243,10 @@ const btnHandler = (event) => {
   }
 };
 
-const displayAllUsers = (joined_room, users) => {
-  let display_users = document.getElementById("users");
-  display_users.querySelectorAll("p").forEach((p) => {
+const displayAllUsers = (room, users) => {
+  // C_LOG(room);
+  let display_users_list = document.getElementById(`${room}-users-list`);
+  display_users_list.querySelectorAll("p").forEach((p) => {
     p.remove();
   });
   users.forEach((user) => {
@@ -232,7 +254,7 @@ const displayAllUsers = (joined_room, users) => {
     p.classList.add("text-end");
     p.textContent = user;
 
-    display_users.append(p);
+    display_users_list.append(p);
   });
 };
 
