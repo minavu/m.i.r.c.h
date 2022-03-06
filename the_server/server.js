@@ -43,10 +43,11 @@ io.on("connection", (socket) => {
 
   socket.on("message", (data) => {
     let { socket_data, message } = data;
-    C_LOG(socket_data);
+    // C_LOG(socket_data);
     updateMyData(socket_data);
     io.to(MY_DATA.my_current_room).emit("message", {
       user: MY_DATA.my_username,
+      room: MY_DATA.my_current_room,
       message: message,
     });
   });
@@ -67,6 +68,7 @@ io.on("connection", (socket) => {
     let { room } = data;
 
     io.to(room).emit("announcement", {
+      room: room,
       announcement: `${MY_DATA.my_username} has left room ${room}`,
     });
 
@@ -76,6 +78,7 @@ io.on("connection", (socket) => {
 
     socket.emit("left_room", {
       socket_data: MY_DATA,
+      room_left: room,
     });
 
     io.emit("update_rooms_list", {
@@ -83,25 +86,16 @@ io.on("connection", (socket) => {
     });
   });
 
-  // socket.on("disconnect", () => {
-  //   if (curr_room === "") {
-  //     io.emit("update_users_list", {
-  //       room: curr_room,
-  //       users: getAllUsers(),
-  //     });
-  //   } else {
-  //     io.to(curr_room).emit("announcement", {
-  //       socket: sock_id,
-  //       announce: "has left room",
-  //       room: curr_room,
-  //     });
-
-  //     io.to(curr_room).emit("udate_users_list", {
-  //       room: curr_room,
-  //       users: getRoomUsers(curr_room),
-  //     });
-  //   }
-  // });
+  socket.on("disconnect", (reason) => {
+    MY_DATA.my_rooms
+      .filter((room) => room !== "Lobby")
+      .forEach((room) => {
+        io.to(room).emit("announcement", {
+          room: room,
+          announcement: `${MY_DATA.my_username} was disconnected...`,
+        });
+      });
+  });
 
   function joinRoomAndEmitStatus(room_to_join) {
     socket.join(room_to_join);
@@ -113,6 +107,7 @@ io.on("connection", (socket) => {
     });
 
     io.to(MY_DATA.my_current_room).emit("announcement", {
+      room: MY_DATA.my_current_room,
       announcement: `${MY_DATA.my_username} just joined room ${MY_DATA.my_current_room}`,
     });
 

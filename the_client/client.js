@@ -1,5 +1,13 @@
 const socket = io("http://localhost:5001");
 const C_LOG = console.log;
+const TEXT_COLORS = [
+  "HoneyDew",
+  "AntiqueWhite",
+  "LemonChiffon",
+  "GreenYellow",
+  "LavenderBlush",
+  "LightSalmon",
+];
 
 const MY_DATA = {
   my_username: "",
@@ -8,7 +16,7 @@ const MY_DATA = {
   my_color: "black",
 };
 let display_chat_title = document.getElementById("title");
-let display_chat_screen = document.getElementById("chat-screen");
+let display_chat_screen = document.getElementById("Lobby-chat-screen");
 
 let joined_room = "";
 
@@ -27,14 +35,30 @@ socket.on("welcome", (data) => {
   );
 });
 
+socket.io.on("reconnect", () => {
+  location.reload();
+});
+
+socket.on("disconnect", (reason) => {
+  MY_DATA.my_rooms.forEach((room) => {
+    let chat_screen = document.getElementById(`${room}-chat-screen`);
+    appendPtagWithScrollToView(
+      chat_screen,
+      "The server has disconnected. Attempting reconnection now..."
+    );
+  });
+});
 socket.on("message", (data) => {
-  let { user, message } = data;
-  appendPtagWithScrollToView(display_chat_screen, `${user}: ${message}`);
+  let { user, room, message } = data;
+  let chat_screen = document.getElementById(`${room}-chat-screen`);
+  appendPtagWithScrollToView(chat_screen, `${user}: ${message}`);
 });
 
 socket.on("announcement", (data) => {
-  let { announcement } = data;
-  appendPtagWithScrollToView(display_chat_screen, announcement);
+  let { room, announcement } = data;
+
+  let chat_screen = document.getElementById(`${room}-chat-screen`);
+  appendPtagWithScrollToView(chat_screen, announcement);
 });
 
 socket.on("update_rooms_list", (data) => {
@@ -49,56 +73,152 @@ socket.on("update_rooms_list", (data) => {
 //   displayAllUsers(room, users);
 // });
 
+let display_chatbox_views_parent = document.getElementById(
+  "chatbox-views-parent"
+);
+const createNewChatboxView = (room_name, z_index) => {
+  let bgc = TEXT_COLORS.shift();
+
+  let display_room_tabs = document.getElementById("room-tabs");
+  let div_tab = document.createElement("div");
+  div_tab.classList.add("pt-3", "pb-3", "border-end", "border-bottom");
+  div_tab.setAttribute("id", `${room_name}-tab`);
+  div_tab.setAttribute("onclick", "btnHandler(event)");
+  div_tab.setAttribute("name", room_name);
+  div_tab.style.writingMode = "vertical-lr";
+  div_tab.style.textOrientation = "upright";
+  div_tab.style.backgroundColor = bgc;
+  div_tab.style.cursor = "pointer";
+  div_tab.textContent = room_name;
+  display_room_tabs.append(div_tab);
+
+  let section = document.createElement("section");
+  section.classList.add(
+    "w-100",
+    "h-100",
+    "position-absolute",
+    "d-flex",
+    "flex-column",
+    "room-view"
+  );
+  section.setAttribute("id", `${room_name}-view`);
+  section.style.zIndex = z_index;
+
+  let div_title = document.createElement("div");
+  div_title.classList.add(
+    "text-center",
+    "pt-2",
+    "d-flex",
+    "justify-content-center",
+    "align-items-center"
+  );
+  div_title.style.height = "55px";
+  div_title.style.backgroundColor = bgc;
+  let leave_btn = document.createElement("input");
+  leave_btn.setAttribute("type", "button");
+  leave_btn.setAttribute("onclick", "btnHandler(event)");
+  leave_btn.setAttribute("value", "Leave");
+  leave_btn.setAttribute("name", room_name);
+  leave_btn.classList.add(
+    "me-2",
+    "btn",
+    "btn-outline-dark",
+    "align-self-start"
+  );
+  leave_btn.style.display = "inline-block";
+  let h2 = document.createElement("h2");
+  h2.style.display = "inline-block";
+  h2.textContent = `Room ${room_name}`;
+  div_title.append(leave_btn);
+  div_title.append(h2);
+
+  let div_screen = document.createElement("div");
+  div_screen.classList.add("ms-1", "flex-grow-1", "bg-white");
+  div_screen.setAttribute("id", `${room_name}-chat-screen`);
+  div_screen.style.overflow = "auto";
+
+  let div_form = document.createElement("div");
+  let form = document.createElement("form");
+  form.classList.add("d-flex");
+  form.setAttribute("onsubmit", "submitHandler(event)");
+  form.setAttribute("name", room_name);
+  let input_text = document.createElement("input");
+  input_text.setAttribute("type", "text");
+  input_text.classList.add(
+    "form-control",
+    "border",
+    "border-2",
+    "border-success",
+    "rounded-0"
+  );
+  input_text.setAttribute("id", `${room_name}-chatbox`);
+  input_text.setAttribute("name", `${room_name}-chatbox`);
+  input_text.setAttribute("placeholder", "Type something...");
+  let input_submit = document.createElement("input");
+  input_submit.setAttribute("type", "submit");
+  input_submit.classList.add("btn", "btn-warning", "rounded-0");
+  input_submit.setAttribute("id", `${room_name}-submit-btn`);
+  input_submit.setAttribute("value", "Send");
+  form.append(input_text);
+  form.append(input_submit);
+  div_form.append(form);
+
+  section.append(div_title);
+  section.append(div_screen);
+  section.append(div_form);
+
+  TEXT_COLORS.push(bgc);
+
+  return section;
+};
+
 socket.on("joined_room", (data) => {
   let { socket_data } = data;
   updateMyData(socket_data);
 
-  display_chat_title.innerHTML = `Room ${MY_DATA.my_current_room}`;
-
-  let btn = document.createElement("input");
-  btn.setAttribute("type", "button");
-  btn.setAttribute("onclick", "btnHandler(event)");
-  btn.setAttribute("value", "Leave");
-  btn.setAttribute("name", MY_DATA.my_current_room);
-  btn.classList.add("me-2", "btn", "btn-outline-dark");
-  btn.style.display = "inline-block";
-  display_chat_title.insertBefore(btn, display_chat_title.firstChild);
+  let new_room_view = createNewChatboxView(MY_DATA.my_current_room, 1);
+  display_chatbox_views_parent.append(new_room_view);
 });
 
 socket.on("left_room", (data) => {
-  let { socket_data } = data;
+  let { socket_data, room_left } = data;
   updateMyData(socket_data);
 
-  display_chat_title.removeChild(display_chat_title.firstChild);
-  display_chat_title.innerHTML = `Room ${MY_DATA.my_current_room}`;
+  document.getElementById(`${room_left}-view`).remove();
+  document.getElementById(`${room_left}-tab`).remove();
 });
 
-document.querySelector("form").addEventListener("submit", (event) => {
+const submitHandler = (event) => {
   event.preventDefault();
-  let message = document.querySelector("#chatbox");
-  C_LOG(MY_DATA);
+  let room_name = event.target.name;
+  let chatbox = document.querySelector(`#${room_name}-chatbox`);
   socket.emit("message", {
     socket_data: MY_DATA,
-    message: message.value,
+    message: chatbox.value,
   });
-  message.value = "";
-});
+  C_LOG(MY_DATA, chatbox.value);
+  chatbox.value = "";
+};
 
 const btnHandler = (event) => {
   if (event.target.value === "Create") {
     socket.emit("create_room");
-  }
-
-  if (event.target.value === "Join") {
+  } else if (event.target.value === "Join") {
     socket.emit("join_room", {
       room: event.target.name,
     });
-  }
-
-  if (event.target.value === "Leave") {
+  } else if (event.target.value === "Leave") {
     socket.emit("leave_room", {
       room: event.target.name,
     });
+  } else {
+    let room_tab = event.target.outerText;
+    document
+      .querySelectorAll(".room-view")
+      .forEach((view) => (view.style.zIndex = 0));
+    document.getElementById(`${room_tab}-view`).style.zIndex = 1;
+
+    MY_DATA.my_current_room = room_tab;
   }
 };
 
