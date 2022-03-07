@@ -255,33 +255,26 @@ const btnHandler = (event) => {
     });
   } else if (event.target.value === "Exit") {
     socket.disconnect();
+  } else if (event.target.value === "DM") {
+    C_LOG("DM", event.target.name);
   } else if (event.target.value === "In") {
-    // C_LOG(event);
-    let room_tab = event.target.name;
-    document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
-      tab.classList.add("bg-secondary");
-    });
-    document.getElementById(`${room_tab}-tab`).classList.remove("bg-secondary");
-    document.querySelectorAll(".room-view").forEach((view) => {
-      view.style.zIndex = 0;
-    });
-    document.getElementById(`${room_tab}-view`).style.zIndex = 1;
-
-    MY_DATA.my_current_room = room_tab;
+    changeViews(event.target.name);
   } else {
-    // C_LOG(event);
-    let room_tab = event.target.outerText;
-    document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
-      tab.classList.add("bg-secondary");
-    });
-    document.getElementById(`${room_tab}-tab`).classList.remove("bg-secondary");
-    document.querySelectorAll(".room-view").forEach((view) => {
-      view.style.zIndex = 0;
-    });
-    document.getElementById(`${room_tab}-view`).style.zIndex = 1;
-
-    MY_DATA.my_current_room = room_tab;
+    changeViews(event.target.outerText);
   }
+};
+
+const changeViews = (room_tab) => {
+  document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
+    tab.classList.add("bg-secondary");
+  });
+  document.getElementById(`${room_tab}-tab`).classList.remove("bg-secondary");
+  document.querySelectorAll(".room-view").forEach((view) => {
+    view.style.zIndex = 0;
+  });
+  document.getElementById(`${room_tab}-view`).style.zIndex = 1;
+
+  MY_DATA.my_current_room = room_tab;
 };
 
 const displayAllUsers = (room, users) => {
@@ -290,12 +283,39 @@ const displayAllUsers = (room, users) => {
     p.remove();
   });
   users.forEach((user) => {
-    let p = document.createElement("p");
-    p.classList.add("text-end");
-    p.textContent = user;
-
-    display_users_list.append(p);
+    appendUserDescription(
+      display_users_list,
+      "btn-outline-primary",
+      "DM",
+      user
+    );
   });
+};
+
+const appendUserDescription = (
+  parentElement,
+  buttonBootstrapColor,
+  buttonMessage,
+  userName
+) => {
+  let div = document.createElement("div");
+  div.classList.add("user-line", "text-end");
+
+  let p = document.createElement("p");
+  p.style.display = "inline-block";
+  p.textContent = userName;
+  div.append(p);
+
+  let btn = document.createElement("input");
+  btn.setAttribute("type", "button");
+  btn.setAttribute("onclick", "btnHandler(event)");
+  btn.setAttribute("value", buttonMessage);
+  btn.setAttribute("name", userName);
+  btn.classList.add("ms-2", "btn", buttonBootstrapColor);
+  btn.style.display = "inline-block";
+  div.append(btn);
+
+  parentElement.append(div);
 };
 
 const displayAllRooms = (all_rooms, my_rooms) => {
