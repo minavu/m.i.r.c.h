@@ -27,7 +27,6 @@ socket.on("welcome", (data) => {
 
   display_chat_title.textContent = `Hello ${MY_DATA.my_username}`;
   displayAllRooms(rooms, MY_DATA.my_rooms);
-  // displayAllUsers(joined_room, users);
 
   appendPtagWithScrollToView(
     display_chat_screen,
@@ -42,11 +41,15 @@ socket.io.on("reconnect", () => {
 socket.on("disconnect", (reason) => {
   MY_DATA.my_rooms.forEach((room) => {
     let chat_screen = document.getElementById(`${room}-chat-screen`);
-    appendPtagWithScrollToView(
-      chat_screen,
-      "The server has disconnected. Attempting reconnection now..."
-    );
+    if (reason !== "io client disconnect") {
+      appendPtagWithScrollToView(
+        chat_screen,
+        "The server has disconnected. Attempting reconnection now..."
+      );
+    }
   });
+
+  C_LOG("disconnection occurred", reason);
 });
 socket.on("message", (data) => {
   let { user, room, message } = data;
@@ -232,7 +235,12 @@ const btnHandler = (event) => {
     socket.emit("leave_room", {
       room: event.target.name,
     });
+  } else if (event.target.value === "Exit") {
+    socket.disconnect();
+    // C_LOG("client attempting disconnect");
+    removeAllRooms();
   } else {
+    // C_LOG(event);
     let room_tab = event.target.outerText;
     document
       .querySelectorAll(".room-view")
@@ -276,6 +284,16 @@ const displayAllRooms = (all_rooms, my_rooms) => {
     );
   });
   appendRoomDescription(display_rooms, "btn-danger", "Create", "New Room");
+  appendRoomDescription(display_rooms, "btn-dark", "Exit", "M.I.R.C.H");
+};
+
+const removeAllRooms = () => {
+  let header = document.querySelector("header");
+  header.style.height = "100vh";
+  header.style.zIndex = 2;
+
+  let h1 = document.querySelector("h1");
+  h1.textContent = "Goodbye...";
 };
 
 const appendRoomDescription = (

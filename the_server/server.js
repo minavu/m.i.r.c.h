@@ -35,11 +35,14 @@ io.on("connection", (socket) => {
     `Client with given username ${MY_DATA.my_username} connected to server...`
   );
 
+  // io.emit("update_rooms_list", {
+  //   rooms: getAllRooms(),
+  // });
+
   io.emit("update_users_list", {
     room: "Lobby",
     users: getAllUsers(),
   });
-  // C_LOG(getAllUsers());
 
   socket.emit("welcome", {
     welcome_message: "Welcome to the chat",
@@ -98,12 +101,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", (reason) => {
+    C_LOG("Server: there was a disconnect", reason);
+    let announce = `${MY_DATA.my_username} was disconnected...`;
+    if (reason === "client namespace disconnect") {
+      announce = `${MY_DATA.my_username} has left the chat...`;
+    }
     MY_DATA.my_rooms
       .filter((room) => room !== "Lobby")
       .forEach((room) => {
         io.to(room).emit("announcement", {
           room: room,
-          announcement: `${MY_DATA.my_username} was disconnected...`,
+          announcement: announce,
         });
 
         io.to(room).emit("update_users_list", {
@@ -111,6 +119,10 @@ io.on("connection", (socket) => {
           users: getRoomUsers(room),
         });
       });
+    io.emit("update_users_list", {
+      room: "Lobby",
+      users: getAllUsers(),
+    });
   });
 
   function joinRoomAndEmitStatus(room_to_join) {
@@ -155,10 +167,11 @@ io.on("connection", (socket) => {
 
   function getRoomUsers(room) {
     let all_room_users = [];
-    // console.log("users in room ", room, io.sockets.adapter.rooms.get(room));
-    io.sockets.adapter.rooms.get(room).forEach((value) => {
-      all_room_users.push(value.substring(0, 6).toUpperCase());
-    });
+    if (io.sockets.adapter.rooms.get(room)) {
+      io.sockets.adapter.rooms.get(room).forEach((value) => {
+        all_room_users.push(value.substring(0, 6).toUpperCase());
+      });
+    }
     return all_room_users;
   }
 
