@@ -94,7 +94,10 @@ const createNewChatboxView = (room_name, z_index) => {
   div_tab.style.textOrientation = "upright";
   div_tab.style.backgroundColor = bgc;
   div_tab.style.cursor = "pointer";
-  div_tab.textContent = room_name;
+  // div_tab.textContent = room_name;
+  let span = document.createElement("span");
+  span.textContent = room_name;
+  div_tab.append(span);
   display_room_tabs.append(div_tab);
 
   let section = document.createElement("section");
@@ -206,6 +209,13 @@ socket.on("joined_room", (data) => {
 
   let new_room_view = createNewChatboxView(MY_DATA.my_current_room, 1);
   display_chatbox_views_parent.append(new_room_view);
+
+  document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
+    tab.classList.add("bg-secondary");
+  });
+  document
+    .getElementById(`${MY_DATA.my_current_room}-tab`)
+    .classList.remove("bg-secondary");
 });
 
 socket.on("left_room", (data) => {
@@ -214,6 +224,10 @@ socket.on("left_room", (data) => {
 
   document.getElementById(`${room_left}-view`).remove();
   document.getElementById(`${room_left}-tab`).remove();
+
+  document
+    .getElementById(`${MY_DATA.my_current_room}-tab`)
+    .classList.remove("bg-secondary");
 });
 
 const submitHandler = (event) => {
@@ -241,14 +255,29 @@ const btnHandler = (event) => {
     });
   } else if (event.target.value === "Exit") {
     socket.disconnect();
-    // C_LOG("client attempting disconnect");
-    // removeAllRooms();
+  } else if (event.target.value === "In") {
+    // C_LOG(event);
+    let room_tab = event.target.name;
+    document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
+      tab.classList.add("bg-secondary");
+    });
+    document.getElementById(`${room_tab}-tab`).classList.remove("bg-secondary");
+    document.querySelectorAll(".room-view").forEach((view) => {
+      view.style.zIndex = 0;
+    });
+    document.getElementById(`${room_tab}-view`).style.zIndex = 1;
+
+    MY_DATA.my_current_room = room_tab;
   } else {
     // C_LOG(event);
     let room_tab = event.target.outerText;
-    document
-      .querySelectorAll(".room-view")
-      .forEach((view) => (view.style.zIndex = 0));
+    document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
+      tab.classList.add("bg-secondary");
+    });
+    document.getElementById(`${room_tab}-tab`).classList.remove("bg-secondary");
+    document.querySelectorAll(".room-view").forEach((view) => {
+      view.style.zIndex = 0;
+    });
     document.getElementById(`${room_tab}-view`).style.zIndex = 1;
 
     MY_DATA.my_current_room = room_tab;
@@ -256,7 +285,6 @@ const btnHandler = (event) => {
 };
 
 const displayAllUsers = (room, users) => {
-  // C_LOG(room);
   let display_users_list = document.getElementById(`${room}-users-list`);
   display_users_list.querySelectorAll("p").forEach((p) => {
     p.remove();
@@ -309,9 +337,12 @@ const removeAllRooms = (reason) => {
   header.style.zIndex = 2;
 
   let h1 = document.querySelector("h1");
-  if (reason === "io client disconnect") h1.textContent = "Come back soon...";
-  if (reason === "io server disconnect") h1.textContent = "Goodbye...";
-  C_LOG("from removeAllRooms function: ", reason);
+  if (reason === "io client disconnect") {
+    h1.textContent = "Come back soon...";
+  }
+  if (reason === "io server disconnect") {
+    h1.textContent = "Goodbye...";
+  }
 };
 
 const appendRoomDescription = (
