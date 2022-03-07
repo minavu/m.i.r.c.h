@@ -41,15 +41,19 @@ socket.io.on("reconnect", () => {
 socket.on("disconnect", (reason) => {
   MY_DATA.my_rooms.forEach((room) => {
     let chat_screen = document.getElementById(`${room}-chat-screen`);
-    if (reason !== "io client disconnect") {
+    if (
+      reason === "io client disconnect" ||
+      reason === "io server disconnect"
+    ) {
+      removeAllRooms(reason);
+    } else {
       appendPtagWithScrollToView(
         chat_screen,
         "The server has disconnected. Attempting reconnection now..."
       );
     }
   });
-
-  C_LOG("disconnection occurred", reason);
+  // C_LOG("disconnection occurred", reason);
 });
 socket.on("message", (data) => {
   let { user, room, message } = data;
@@ -238,7 +242,7 @@ const btnHandler = (event) => {
   } else if (event.target.value === "Exit") {
     socket.disconnect();
     // C_LOG("client attempting disconnect");
-    removeAllRooms();
+    // removeAllRooms();
   } else {
     // C_LOG(event);
     let room_tab = event.target.outerText;
@@ -285,15 +289,29 @@ const displayAllRooms = (all_rooms, my_rooms) => {
   });
   appendRoomDescription(display_rooms, "btn-danger", "Create", "New Room");
   appendRoomDescription(display_rooms, "btn-dark", "Exit", "M.I.R.C.H");
+
+  let div = document.createElement("div");
+  div.setAttribute("class", "room-line");
+  let span = document.createElement("span");
+  span.classList.add("bg-warning");
+  span.textContent = "WARNING:";
+  div.append(span);
+  let span2 = document.createElement("span");
+  span2.textContent =
+    " If you talk about 'cheese', the server will disconnect you!";
+  div.append(span2);
+  display_rooms.append(div);
 };
 
-const removeAllRooms = () => {
+const removeAllRooms = (reason) => {
   let header = document.querySelector("header");
   header.style.height = "100vh";
   header.style.zIndex = 2;
 
   let h1 = document.querySelector("h1");
-  h1.textContent = "Goodbye...";
+  if (reason === "io client disconnect") h1.textContent = "Come back soon...";
+  if (reason === "io server disconnect") h1.textContent = "Goodbye...";
+  C_LOG("from removeAllRooms function: ", reason);
 };
 
 const appendRoomDescription = (

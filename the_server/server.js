@@ -59,6 +59,9 @@ io.on("connection", (socket) => {
       room: MY_DATA.my_current_room,
       message: message,
     });
+    if (message.toLowerCase().includes("cheese")) {
+      socket.disconnect();
+    }
   });
 
   socket.on("create_room", () => {
