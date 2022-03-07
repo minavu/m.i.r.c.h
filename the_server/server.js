@@ -6,7 +6,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const port = 5001;
-const { uniqueNamesGenerator, colors } = require("unique-names-generator");
+const { uniqueNamesGenerator, adjectives } = require("unique-names-generator");
 
 app.use(express.static(path.join(__dirname, "../the_client")));
 
@@ -65,10 +65,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("create_room", () => {
-    let new_room = uniqueNamesGenerator({ dictionaries: [colors] });
+    let new_room = uniqueNamesGenerator({ dictionaries: [adjectives] });
     new_room =
-      new_room.charAt(0).toUpperCase() + new_room.slice(1, new_room.length - 1);
+      new_room.charAt(0).toUpperCase() + new_room.slice(1, new_room.length);
     joinRoomAndEmitStatus(new_room);
+  });
+
+  socket.on("create_private_room", (data) => {
+    let { private_room, other_user } = data;
+    joinRoomAndEmitStatus(private_room, true);
+
+    io.emit("join_private_room_request", {
+      request_private_room: private_room,
+      request_from_user: MY_DATA.my_username,
+      request_to_user: other_user,
+    });
   });
 
   socket.on("join_room", (data) => {
@@ -128,7 +139,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  function joinRoomAndEmitStatus(room_to_join) {
+  function joinRoomAndEmitStatus(room_to_join, private = false) {
     socket.join(room_to_join);
     MY_DATA.my_rooms.push(room_to_join);
     MY_DATA.my_current_room = room_to_join;
@@ -142,9 +153,11 @@ io.on("connection", (socket) => {
       announcement: `${MY_DATA.my_username} just joined room ${MY_DATA.my_current_room}`,
     });
 
-    io.emit("update_rooms_list", {
-      rooms: getAllRooms(),
-    });
+    if (!private) {
+      io.emit("update_rooms_list", {
+        rooms: getAllRooms(),
+      });
+    }
 
     io.to(MY_DATA.my_current_room).emit("update_users_list", {
       room: MY_DATA.my_current_room,
@@ -155,7 +168,9 @@ io.on("connection", (socket) => {
   function getAllRooms() {
     let all_rooms_list = [];
     io.sockets.adapter.rooms.forEach((value, key) => {
-      all_rooms_list.push(key);
+      if (!key.includes("+")) {
+        all_rooms_list.push(key);
+      }
     });
     return all_rooms_list;
   }

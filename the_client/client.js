@@ -32,6 +32,8 @@ socket.on("welcome", (data) => {
     display_chat_screen,
     `${welcome_message}, ${MY_DATA.my_username}. Select a room from the left screen to start.`
   );
+
+  // document.querySelector("h1").append(`, ${MY_DATA.my_username}`);
 });
 
 socket.io.on("reconnect", () => {
@@ -230,6 +232,26 @@ socket.on("left_room", (data) => {
     .classList.remove("bg-secondary");
 });
 
+socket.on("join_private_room_request", (data) => {
+  let { request_private_room, request_from_user, request_to_user } = data;
+  if (request_to_user === MY_DATA.my_username) {
+    let answer = popupRequestScreen(
+      request_private_room,
+      request_from_user,
+      request_to_user
+    );
+    if (answer === "Accept") {
+      C_LOG("dm request accepted");
+    }
+  }
+});
+
+const popupRequestScreen = (
+  request_private_room,
+  request_from_user,
+  request_to_user
+) => {};
+
 const submitHandler = (event) => {
   event.preventDefault();
   let room_name = event.target.name;
@@ -256,7 +278,20 @@ const btnHandler = (event) => {
   } else if (event.target.value === "Exit") {
     socket.disconnect();
   } else if (event.target.value === "DM") {
-    C_LOG("DM", event.target.name);
+    // C_LOG("DM", event.target.name);
+    let room_name = `${event.target.name}+${MY_DATA.my_username}`;
+    if (MY_DATA.my_username < event.target.name) {
+      room_name = `${MY_DATA.my_username}+${event.target.name}`;
+    }
+    if (MY_DATA.my_rooms.includes(room_name)) {
+      C_LOG("DM room open already");
+    } else {
+      C_LOG("Opening private room for ", room_name);
+      socket.emit("create_private_room", {
+        private_room: room_name,
+        other_user: event.target.name,
+      });
+    }
   } else if (event.target.value === "In") {
     changeViews(event.target.name);
   } else {
@@ -279,8 +314,8 @@ const changeViews = (room_tab) => {
 
 const displayAllUsers = (room, users) => {
   let display_users_list = document.getElementById(`${room}-users-list`);
-  display_users_list.querySelectorAll("p").forEach((p) => {
-    p.remove();
+  display_users_list.querySelectorAll(".user-line").forEach((user) => {
+    user.remove();
   });
   users.forEach((user) => {
     appendUserDescription(
