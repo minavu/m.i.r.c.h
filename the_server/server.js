@@ -78,6 +78,14 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("decline_private_room_request", (data) => {
+    let { request_private_room, request_from_user, request_to_user } = data;
+    io.to(request_private_room).emit("announcement", {
+      room: request_private_room,
+      announcement: `${request_to_user} declined your DM request`,
+    });
+  });
+
   socket.on("join_room", (data) => {
     let { room } = data;
     joinRoomAndEmitStatus(room);
