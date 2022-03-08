@@ -35,19 +35,15 @@ io.on("connection", (socket) => {
     `Client with given username ${MY_DATA.my_username} connected to server...`
   );
 
-  // io.emit("update_rooms_list", {
-  //   rooms: getAllRooms(),
-  // });
-
-  io.emit("update_users_list", {
-    room: "Lobby",
-    users: getAllUsers(),
-  });
-
   socket.emit("welcome", {
     welcome_message: "Welcome to the chat",
     socket_data: MY_DATA,
     rooms: getAllRooms(),
+    users: getAllUsers(),
+  });
+
+  io.emit("update_users_list", {
+    room: "Lobby",
     users: getAllUsers(),
   });
 
@@ -168,7 +164,7 @@ io.on("connection", (socket) => {
   function getAllRooms() {
     let all_rooms_list = [];
     io.sockets.adapter.rooms.forEach((value, key) => {
-      if (!key.includes("+")) {
+      if (!key.includes("DM__")) {
         all_rooms_list.push(key);
       }
     });

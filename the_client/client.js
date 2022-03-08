@@ -24,6 +24,7 @@ socket.on("welcome", (data) => {
   let { welcome_message, socket_data, rooms, users } = data;
 
   updateMyData(socket_data);
+  // C_LOG(MY_DATA);
 
   display_chat_title.textContent = `Hello ${MY_DATA.my_username}`;
   displayAllRooms(rooms, MY_DATA.my_rooms);
@@ -242,6 +243,9 @@ socket.on("join_private_room_request", (data) => {
     );
     if (answer === "Accept") {
       C_LOG("dm request accepted");
+      socket.emit("join_room", {
+        room: request_private_room,
+      });
     }
   }
 });
@@ -250,7 +254,9 @@ const popupRequestScreen = (
   request_private_room,
   request_from_user,
   request_to_user
-) => {};
+) => {
+  return "Accept";
+};
 
 const submitHandler = (event) => {
   event.preventDefault();
@@ -260,7 +266,6 @@ const submitHandler = (event) => {
     socket_data: MY_DATA,
     message: chatbox.value,
   });
-  C_LOG(MY_DATA, chatbox.value);
   chatbox.value = "";
 };
 
@@ -278,13 +283,16 @@ const btnHandler = (event) => {
   } else if (event.target.value === "Exit") {
     socket.disconnect();
   } else if (event.target.value === "DM") {
-    // C_LOG("DM", event.target.name);
-    let room_name = `${event.target.name}+${MY_DATA.my_username}`;
+    if (MY_DATA.my_username === event.target.name) {
+      return;
+    }
+    let room_name = `DM__${event.target.name}__${MY_DATA.my_username}`;
     if (MY_DATA.my_username < event.target.name) {
-      room_name = `${MY_DATA.my_username}+${event.target.name}`;
+      room_name = `DM__${MY_DATA.my_username}__${event.target.name}`;
     }
     if (MY_DATA.my_rooms.includes(room_name)) {
       C_LOG("DM room open already");
+      changeViews(room_name);
     } else {
       C_LOG("Opening private room for ", room_name);
       socket.emit("create_private_room", {
@@ -317,14 +325,24 @@ const displayAllUsers = (room, users) => {
   display_users_list.querySelectorAll(".user-line").forEach((user) => {
     user.remove();
   });
-  users.forEach((user) => {
-    appendUserDescription(
-      display_users_list,
-      "btn-outline-primary",
-      "DM",
-      user
-    );
-  });
+
+  appendUserDescription(
+    display_users_list,
+    "btn-outline-dark",
+    "SELF",
+    MY_DATA.my_username
+  );
+
+  users
+    .filter((user) => user !== MY_DATA.my_username)
+    .forEach((user) => {
+      appendUserDescription(
+        display_users_list,
+        "btn-outline-primary",
+        "DM",
+        user
+      );
+    });
 };
 
 const appendUserDescription = (
@@ -348,6 +366,9 @@ const appendUserDescription = (
   btn.setAttribute("name", userName);
   btn.classList.add("ms-2", "btn", buttonBootstrapColor);
   btn.style.display = "inline-block";
+  if (MY_DATA.my_username === userName) {
+    btn.disabled = true;
+  }
   div.append(btn);
 
   parentElement.append(div);
