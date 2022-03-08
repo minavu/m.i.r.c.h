@@ -28,7 +28,6 @@ io.on("connection", (socket) => {
     my_rooms: ["Lobby"],
     my_current_room: "Lobby",
     my_color: color,
-    my_dm_requests: [],
   };
   TEXT_COLORS.push(color);
 
@@ -195,13 +194,11 @@ io.on("connection", (socket) => {
   }
 
   function updateMyData(new_socket_data) {
-    let { my_username, my_rooms, my_current_room, my_color, my_dm_requests } =
-      new_socket_data;
+    let { my_username, my_rooms, my_current_room, my_color } = new_socket_data;
     MY_DATA.my_username = my_username;
     MY_DATA.my_rooms = my_rooms;
     MY_DATA.my_current_room = my_current_room;
     MY_DATA.my_color = my_color;
-    MY_DATA.my_dm_requests = my_dm_requests;
   }
 });
 

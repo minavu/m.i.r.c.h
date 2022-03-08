@@ -13,8 +13,7 @@ const MY_DATA = {
   my_username: "",
   my_rooms: [],
   my_current_room: "",
-  my_color: "",
-  my_dm_requests: [],
+  my_color: "black",
 };
 let display_chat_title = document.getElementById("title");
 let display_chat_screen = document.getElementById("Lobby-chat-screen");
@@ -236,30 +235,22 @@ socket.on("left_room", (data) => {
 socket.on("join_private_room_request", (data) => {
   let { request_private_room, request_from_user, request_to_user } = data;
   if (request_to_user === MY_DATA.my_username) {
-    MY_DATA.my_dm_requests.push(request_from_user);
-    MY_DATA.my_rooms.forEach((room) => {
-      socket.emit("update_users_list", {
-        room: room,
-      });
-    });
-    // let answer = popupRequestScreen(
-    //   request_private_room,
-    //   request_from_user,
-    //   request_to_user
-    // );
-    // if (answer === "Accept") {
-    //   C_LOG("dm request accepted");
-    // }
+    let answer = popupRequestScreen(
+      request_private_room,
+      request_from_user,
+      request_to_user
+    );
+    if (answer === "Accept") {
+      C_LOG("dm request accepted");
+    }
   }
 });
 
-// const popupRequestScreen = (
-//   request_private_room,
-//   request_from_user,
-//   request_to_user
-// ) => {
-//   return "Accept";
-// };
+const popupRequestScreen = (
+  request_private_room,
+  request_from_user,
+  request_to_user
+) => {};
 
 const submitHandler = (event) => {
   event.preventDefault();
@@ -327,16 +318,10 @@ const displayAllUsers = (room, users) => {
     user.remove();
   });
   users.forEach((user) => {
-    let buttonBootstrapColor = "btn-outline-primary";
-    let buttonMessage = "DM";
-    if (MY_DATA.my_dm_requests.includes(user)) {
-      buttonBootstrapColor = "btn-danger";
-      buttonMessage = "Request";
-    }
     appendUserDescription(
       display_users_list,
-      buttonBootstrapColor,
-      buttonMessage,
+      "btn-outline-primary",
+      "DM",
       user
     );
   });
@@ -449,11 +434,9 @@ const appendPtagWithScrollToView = (parentElement, message) => {
 };
 
 const updateMyData = (new_socket_data) => {
-  let { my_username, my_rooms, my_current_room, my_color, my_dm_requests } =
-    new_socket_data;
+  let { my_username, my_rooms, my_current_room, my_color } = new_socket_data;
   MY_DATA.my_username = my_username;
   MY_DATA.my_rooms = my_rooms;
   MY_DATA.my_current_room = my_current_room;
   MY_DATA.my_color = my_color;
-  MY_DATA.my_dm_requests = my_dm_requests;
 };
