@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M.I.R.C.H</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script defer type="text/javascript" src="the_client/client.js"></script>
+  </head>
+
+  <body class="m-0 p-0 d-flex-column align-items-center bg-dark">
+    <header class="m-0 p-0 d-flex align-items-center justify-content-center text-light" style="height: 10vh;">
+      <h1 class="m-0 p-0">Welcome to M.I.R.C.H</h1>
+    </header>
+
+    <main class="d-flex bg-light w-100 rounded-2" style="height: 90vh;">
+
+      <section class="w-25 border border-5 ps-2" id="rooms" style="overflow: auto;">
+        <h4 class="pt-3 text-decoration-underline">All Rooms</h4>
+      </section>
+
+      <section class="w-75 d-flex align-items-stretch border-top border-bottom border-5">
+        <section class="bg-secondary" id="room-tabs" style="overflow: auto;">
+          <div class="pt-3 pb-3 border-end border-bottom" id="Lobby-tab" name="Lobby" style="writing-mode: vertical-lr; text-orientation: upright; cursor: pointer; background-color: deepskyblue;" onclick="btnHandler(event);">
+            <span>
+              Lobby
+            </span>
+          </div>
+        </section>
+        
+        <div class="flex-grow-1 position-relative" id="chatbox-views-parent">
+          <section class="w-100 h-100 position-absolute d-flex room-view" id="Lobby-view" style="z-index: 0;">
+
+            <section class="flex-grow-1 d-flex flex-column">
+              <div class="text-center pt-2 d-flex justify-content-center align-items-center" style="height: 55px; background-color: deepskyblue;"><h2 id="title">Hello World</h2></div>
+              <div class="ps-1 pe-1 flex-grow-1 bg-white" id="Lobby-chat-screen" style="overflow: auto;"></div>
+              <div class="bg-white">
+                <form class="d-flex">
+                  <input disabled type="text" class="form-control border border-2 border-success rounded-0" id="Lobby-chatbox" name="chatbox" placeholder="Type something...">
+                  <input disabled type="submit" class="btn btn-success rounded-0" id="Lobby-submit-btn" value="Send">
+                </form>
+              </div>
+            </section>
+
+            <section class="w-25 bg-white border-start border-end border-5 pe-2" id="Lobby-users-list" style="overflow: auto;">
+              <h4 class="pt-3 text-decoration-underline text-end" id="Lobby-users-title">All Users</h4>
+            </section>
+
+          </section>
+        </div>
+      </section>
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">DM Request</h5>
+        <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+      </div>
+      <div class="modal-body">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="Decline-btn">Decline</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="Accept-btn">Accept</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    </main>
+  </body>
+</html>
