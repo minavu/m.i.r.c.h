@@ -5,10 +5,10 @@ const app = express();
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-const port = 5001;
+const port = process.env.PORT || 5001;
 const { uniqueNamesGenerator, adjectives } = require("unique-names-generator");
 
-app.use(express.static(path.join(__dirname, "../the_client")));
+app.use(express.static(path.join(__dirname, "..")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
