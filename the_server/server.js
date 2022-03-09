@@ -120,10 +120,12 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     C_LOG("Server: there was a disconnect", reason);
+
     let announce = `${MY_DATA.my_username} was disconnected...`;
     if (reason === "client namespace disconnect") {
       announce = `${MY_DATA.my_username} has left the chat...`;
     }
+
     MY_DATA.my_rooms
       .filter((room) => room !== "Lobby")
       .forEach((room) => {
@@ -137,9 +139,14 @@ io.on("connection", (socket) => {
           users: getRoomUsers(room),
         });
       });
+
     io.emit("update_users_list", {
       room: "Lobby",
       users: getAllUsers(),
+    });
+
+    io.emit("update_rooms_list", {
+      rooms: getAllRooms(),
     });
   });
 
