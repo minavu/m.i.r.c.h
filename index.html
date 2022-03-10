@@ -18,10 +18,12 @@
     <main class="d-flex bg-light w-100 rounded-2" style="height: 90vh;">
 
       <section class="w-25 border border-5 ps-2" id="rooms" style="overflow: auto;">
+      <!-- <section class="border border-5 ps-2" id="rooms" style="overflow: auto; width: calc(25% - 25px);"> -->
         <h4 class="pt-3 text-decoration-underline">All Rooms</h4>
       </section>
 
-      <section class="w-75 d-flex align-items-stretch border-top border-bottom border-5">
+      <!-- <section class="w-75 flex-grow-1 d-flex align-items-stretch border-top border-bottom border-5"> -->
+      <section class="flex-grow-1 d-flex align-items-stretch border-top border-bottom border-5">
         <section class="bg-secondary" id="room-tabs" style="overflow: auto;">
           <div class="pt-3 pb-3 border-end border-bottom" id="Lobby-tab" name="Lobby" style="writing-mode: vertical-lr; text-orientation: upright; cursor: pointer; background-color: deepskyblue;" onclick="btnHandler(event);">
             <span>
@@ -34,7 +36,7 @@
           <section class="w-100 h-100 position-absolute d-flex room-view" id="Lobby-view" style="z-index: 0;">
 
             <section class="flex-grow-1 d-flex flex-column">
-              <div class="text-center pt-2 d-flex justify-content-center align-items-center" style="height: 55px; background-color: deepskyblue;"><h2 id="title">Hello World</h2></div>
+              <div class="text-center pt-2 d-flex justify-content-center align-items-center" style="height: 55px; background-color: deepskyblue; padding-right: 13px;"><h2 id="title">Hello World</h2></div>
               <div class="ps-1 pe-1 flex-grow-1 bg-white" id="Lobby-chat-screen" style="overflow: auto;"></div>
               <div class="bg-white">
                 <form class="d-flex">
@@ -44,7 +46,8 @@
               </div>
             </section>
 
-            <section class="w-25 bg-white border-start border-end border-5 pe-2" id="Lobby-users-list" style="overflow: auto;">
+            <!-- <section class="w-25 bg-white border-start border-end border-5 pe-2" id="Lobby-users-list" style="overflow: auto;"> -->
+            <section class="bg-white border-start border-end border-5 pe-2" id="Lobby-users-list" style="overflow: auto; width: calc(100vw / 4);">
               <h4 class="pt-3 text-decoration-underline text-end" id="Lobby-users-title">All Users</h4>
             </section>
 

@@ -404,6 +404,7 @@ const createNewChatboxView = (room_name, z_index) => {
   );
   div_title.style.height = "55px";
   div_title.style.backgroundColor = bgc;
+  div_title.style.paddingRight = "13px";
   let leave_btn = document.createElement("input");
   leave_btn.setAttribute("type", "button");
   leave_btn.setAttribute("onclick", "btnHandler(event)");
@@ -460,7 +461,7 @@ const createNewChatboxView = (room_name, z_index) => {
 
   let inner_section_2 = document.createElement("section");
   inner_section_2.classList.add(
-    "w-25",
+    // "w-25",
     "bg-white",
     "border-start",
     "border-end",
@@ -469,6 +470,7 @@ const createNewChatboxView = (room_name, z_index) => {
   );
   inner_section_2.setAttribute("id", `${room_name}-users-list`);
   inner_section_2.style.overflow = "auto";
+  inner_section_2.style.width = "calc(100vw / 4)";
   let h4 = document.createElement("h4");
   h4.classList.add("pt-3", "text-decoration-underline", "text-end");
   h4.setAttribute("id", `${room_name}-users-title`);
