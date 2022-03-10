@@ -214,7 +214,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(
-    `M.I.R.C.H Application running at "http://localhost:${port}/" tinker branch`
-  );
+  console.log(`M.I.R.C.H Application running at "http://localhost:${port}/"`);
 });
