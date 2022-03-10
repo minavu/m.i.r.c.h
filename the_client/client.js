@@ -1,7 +1,6 @@
 const socket = io();
-const C_LOG = console.log;
 
-const TEXT_COLORS = [
+const BG_COLORS = [
   "HoneyDew",
   "AntiqueWhite",
   "LemonChiffon",
@@ -16,27 +15,25 @@ const MY_DATA = {
   my_current_room: "",
   my_color: "black",
 };
+
 let display_chat_title = document.getElementById("title");
 let display_chat_screen = document.getElementById("Lobby-chat-screen");
-
-let joined_room = "";
+let display_chatbox_views_parent = document.getElementById(
+  "chatbox-views-parent"
+);
 
 socket.on("welcome", (data) => {
-  let { welcome_message, socket_data, rooms, users } = data;
+  let { welcome_message, socket_data, rooms } = data;
 
   updateMyData(socket_data);
+  displayAllRooms(rooms, MY_DATA.my_rooms);
 
   display_chat_title.textContent = `Hello ${MY_DATA.my_username}`;
-  displayAllRooms(rooms, MY_DATA.my_rooms);
 
   appendPtagWithScrollToView(
     display_chat_screen,
     `${welcome_message}, ${MY_DATA.my_username}. Select a room from the left screen to start.`
   );
-});
-
-socket.io.on("reconnect", () => {
-  location.reload();
 });
 
 socket.on("disconnect", (reason) => {
@@ -55,15 +52,20 @@ socket.on("disconnect", (reason) => {
     }
   });
 });
+
+socket.io.on("reconnect", () => {
+  location.reload();
+});
+
 socket.on("message", (data) => {
   let { user, room, message } = data;
+
   let chat_screen = document.getElementById(`${room}-chat-screen`);
   appendPtagWithScrollToView(chat_screen, `${user}: ${message}`);
 });
 
 socket.on("announcement", (data) => {
   let { room, announcement } = data;
-
   let chat_screen = document.getElementById(`${room}-chat-screen`);
   appendPtagWithScrollToView(chat_screen, announcement);
 });
@@ -82,12 +84,11 @@ socket.on("joined_room", (data) => {
   let { socket_data } = data;
   updateMyData(socket_data);
 
-  let display_chatbox_views_parent = document.getElementById(
-    "chatbox-views-parent"
+  createNewChatboxView(
+    display_chatbox_views_parent,
+    MY_DATA.my_current_room,
+    1
   );
-
-  let new_room_view = createNewChatboxView(MY_DATA.my_current_room, 1);
-  display_chatbox_views_parent.append(new_room_view);
 
   document.querySelectorAll("div[id$='-tab']").forEach((tab) => {
     tab.classList.add("bg-secondary");
@@ -190,10 +191,8 @@ const btnHandler = (event) => {
       room_name = `DM__${MY_DATA.my_username}__${event.target.name}`;
     }
     if (MY_DATA.my_rooms.includes(room_name)) {
-      C_LOG("DM room open already");
       changeViews(room_name);
     } else {
-      C_LOG("Opening private room for ", room_name);
       socket.emit("create_private_room", {
         private_room: room_name,
         other_user: event.target.name,
@@ -361,8 +360,8 @@ const updateMyData = (new_socket_data) => {
   MY_DATA.my_color = my_color;
 };
 
-const createNewChatboxView = (room_name, z_index) => {
-  let bgc = TEXT_COLORS.shift();
+const createNewChatboxView = (parent_element, room_name, z_index) => {
+  let bgc = BG_COLORS.shift();
 
   let display_room_tabs = document.getElementById("room-tabs");
   let div_tab = document.createElement("div");
@@ -374,7 +373,6 @@ const createNewChatboxView = (room_name, z_index) => {
   div_tab.style.textOrientation = "upright";
   div_tab.style.backgroundColor = bgc;
   div_tab.style.cursor = "pointer";
-  // div_tab.textContent = room_name;
   let span = document.createElement("span");
   span.textContent = room_name;
   div_tab.append(span);
@@ -461,7 +459,6 @@ const createNewChatboxView = (room_name, z_index) => {
 
   let inner_section_2 = document.createElement("section");
   inner_section_2.classList.add(
-    // "w-25",
     "bg-white",
     "border-start",
     "border-end",
@@ -480,7 +477,7 @@ const createNewChatboxView = (room_name, z_index) => {
   section.append(inner_section_1);
   section.append(inner_section_2);
 
-  TEXT_COLORS.push(bgc);
+  BG_COLORS.push(bgc);
 
-  return section;
+  parent_element.append(section);
 };
